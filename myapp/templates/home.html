@@ -1,0 +1,10 @@
+{% extends "layouts/base.html" %}
+{% block title %}Todo App{% endblock %}
+
+{% block content %}
+<div class="container text-center align-items-center justify-content-center mt-5">
+    <h1>Welcome to the Todo App</h1>
+    <p>This is a simple todo app built with Django</p>
+    <a href="{% url 'todos' %}" class="btn btn-primary">Get Started</a>
+</div>
+{% endblock %}
