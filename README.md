@@ -2,7 +2,7 @@
 Simple todo app built with Django
 
 # Setup guide
-- Clone project
+- Clone repo and go inside the directory
 - Create environment
   - python -m venv .venv
 - Enable/activate environment
