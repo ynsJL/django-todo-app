@@ -6,7 +6,8 @@ Simple todo app built with Django
 - Create environment
   - python -m venv .venv
 - Enable/activate environment
-  - {name}\Scripts\activate
+  - {envrinment directory name}\Scripts\activate
+       - ex: .venv\Scripts\activate
 - Install required packages
   - pip install -r requirements.txt
 - Run migration
