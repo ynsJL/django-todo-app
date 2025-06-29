@@ -2,52 +2,178 @@
 
 {% block title %}Todos{% endblock %}
 
+{% block style %}
+<style>
+  .title-textarea {
+    resize: none;
+    height: 20rem;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container">
-    {% include "components/flash-message.html" %}
-    <div class="mt-5">
-    <h2>Todo List</h2>
-        <form method="post">
-        {% csrf_token %}
-        <div>
-            <input class="form-control" type="text" name="task" placeholder="Add a new todo">
-            {% if error %}
-                <div class="text-danger text-sm mt-1">{{ error }}</div>
-            {% endif %}
-            <button class="btn btn-primary mt-2" type="submit">Add Task</button>
-        </div>
-        </form>
-        <div class="row mt-5">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Task</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for todo in todos %}
-                    <tr>
-                        <td>{{ todo.title }}</td>
-                        <td>{% if todo.completed %}Completed{% else %}Not Completed{% endif %}</td>
-                        <td>
-                            <form action="{% url 'toggle_todo' todo.id %}" method="post" style="display: inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="btn {% if todo.completed %}btn-success{% else %}btn-warning{% endif %}">
-                                    {% if todo.completed %}Mark Incomplete{% else %}Mark Complete{% endif %}
-                                </button>
-                            </form>
-                            <form action="{% url 'delete_todo' todo.id %}" method="post" style="display: inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-danger">Delete</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+  {% include "components/flash-message.html" %}
+  <div class="mt-5">
+  <h2>Todo List</h2>
+    <form method="post">
+    {% csrf_token %}
+    <div>
+      <input class="form-control" type="text" name="task" placeholder="Add a new todo">
+      {% if error %}
+        <div class="text-danger text-sm mt-1">{{ error }}</div>
+      {% endif %}
+      <button class="btn btn-primary mt-2" type="submit">Add Task</button>
     </div>
+    </form>
+      <div class="row mt-5">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Task</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for todo in todos %}
+              <tr>
+                <td class="w-50">
+                  <span id="todo-title-text-{{ todo.id }}">{{ todo.title }}</span>
+                </td>
+                <td class="text-nowrap">{% if todo.completed %}Completed{% else %}Not Completed{% endif %}</td>
+                <td>
+                  <div class="d-flex flex-row">
+                    <form action="{% url 'toggle_todo' todo.id %}" method="post" style="display: inline;">
+                      {% csrf_token %}
+                      <button type="submit" class="btn {% if todo.completed %}btn-success{% else %}btn-warning{% endif %} ">
+                        {% if todo.completed %}Mark Incomplete{% else %}Mark Complete{% endif %}
+                      </button>
+                    </form>
+                    <button 
+                      class="btn btn-sm btn-primary ms-3 edit-btn" 
+                      data-id="{{ todo.id }}" 
+                      data-title="{{ todo.title }}"
+                      {% if todo.completed %}hidden{% else %}{% endif %}
+                    >
+                      Edit
+                    </button>
+                    <form action="{% url 'delete_todo' todo.id %}" method="post" style="display: inline;">
+                      {% csrf_token %}
+                      <button
+                        type="submit"
+                        class="btn btn-danger ms-3"
+                        {% if todo.completed %}hidden{% else %}{% endif %}
+                      >
+                        Delete
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+      </div>
+  </div>
 </div>
+{% endblock %}
+
+<!-- Edit modal -->
+{% block modal %}
+<div class="modal fade" id="editTodoModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="{% url 'edit_todo' %}" id="editTodoForm">
+      {% csrf_token %}
+      <input type="hidden" name="id" id="todo-id">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Todo</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <textarea class="form-control title-textarea" name="modal-title" id="todo-title"></textarea>
+          <div class="text-danger text-sm mt-1 d-none" id="modal-error-box"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Save</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+$(document).ready(function () {
+  $('.edit-btn').on('click', function () {
+    const todoId = $(this).data('id');
+    const todoTitle = $(this).data('title');
+
+    $('#todo-id').val(todoId);
+    $('#todo-title').val(todoTitle);
+
+    const modalElement = document.getElementById('editTodoModal');
+    if (modalElement) {
+      const modal = new bootstrap.Modal(modalElement);
+      modal.show();
+    } else {
+      console.error('Modal element not found');
+    }
+  });
+
+  $('.btn-close').on('click', () => {
+    const modalElement = document.getElementById('editTodoModal');
+
+  });
+
+  $('#editTodoForm').on('submit', function (e) {
+    e.preventDefault();
+
+    // Hide any previous error message
+    $('#modal-error-box').addClass('d-none').text('');
+
+    const form = $(this);
+    const data = form.serialize();
+    const csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
+    const modalEl = document.getElementById('editTodoModal');
+    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+
+    $.ajax({
+      url: '{% url "edit_todo" %}',
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrfToken
+      },
+      data: data,
+      success: function (response) {
+        if (response.success) {
+          // Close modal and reload list or update UI
+          modalInstance.hide();
+
+          const todoId = $('#todo-id').val();
+          const newTitle = $('#todo-title').val();
+          $(`#todo-title-text-${todoId}`).text(newTitle);
+
+          // Display success message
+          $('.manual-alert-text').text(response.message);
+          $('.manual-alert').removeClass('d-none').addClass('alert-success');
+        } else {
+          // If no changes, close the modal
+          if (response.error === 'Equal') {
+            modalInstance.hide();
+
+            return;
+          }
+          $('#modal-error-box').text(response.error).removeClass('d-none');
+        }
+      },
+      error: function () {
+        $('#modal-error-box').text('An unexpected error occurred.').removeClass('d-none');
+      }
+    });
+  });
+});
+</script>
 {% endblock %}

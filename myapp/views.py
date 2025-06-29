@@ -1,6 +1,9 @@
-from django.shortcuts import render, redirect
-from .models import TodoItem
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse
 from django.contrib import messages
+from .models import TodoItem
+import json
+
 
 # Create your views here.
 def home(request):
@@ -36,3 +39,36 @@ def delete_todo(request, todo_id):
     todo.delete()
     messages.error(request, 'Todo deleted successfully')
     return redirect('todos')  
+
+from django.http import JsonResponse
+from .models import TodoItem
+from django.shortcuts import get_object_or_404
+
+def edit_todo(request):
+    if request.method == 'POST':
+        title = request.POST.get('modal-title')
+        todo_id = request.POST.get('id')
+
+        if not title:
+            return JsonResponse({'success': False, 'error': 'Please input a task'})
+
+        todo = get_object_or_404(TodoItem, id=todo_id)
+
+        if todo.title.strip() == title.strip():
+            return JsonResponse({'success': False, 'error': 'Equal'})
+
+        todo.title = title
+        todo.save()
+
+        return JsonResponse({'success': True, 'message': 'Updated the task succcessfully'})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+def dd(data):
+    try:
+        dump = json.dumps(data, indent=2, default=str)
+    except Exception:
+        dump = str(data)
+    response = HttpResponse(f"<pre>{dump}</pre>", content_type="text/html")
+    # Stop further processing like Laravel dd()
+    raise Exception(response)
