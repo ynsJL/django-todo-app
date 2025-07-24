@@ -8,6 +8,9 @@
     resize: none;
     height: 20rem;
   }
+  .edit-btn {
+    width: 80px;
+  }
 </style>
 {% endblock %}
 
@@ -37,12 +40,12 @@
             </thead>
             <tbody>
               {% for todo in todos %}
-              <tr>
-                <td class="w-50">
+              <tr class="">
+                <td class="w-50 align-middle">
                   <span id="todo-title-text-{{ todo.id }}">{{ todo.title }}</span>
                 </td>
-                <td class="text-nowrap">{% if todo.completed %}Completed{% else %}Not Completed{% endif %}</td>
-                <td>
+                <td class="text-nowrap align-middle">{% if todo.completed %}Completed{% else %}Not Completed{% endif %}</td>
+                <td class="align-middle">
                   <div class="d-flex flex-row">
                     <form action="{% url 'toggle_todo' todo.id %}" method="post" style="display: inline;">
                       {% csrf_token %}

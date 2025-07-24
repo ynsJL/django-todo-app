@@ -1,9 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 from .models import TodoItem
-import json
-
 
 # Create your views here.
 def home(request):
@@ -28,21 +26,17 @@ def todos(request):
     return render(request, 'todos.html', {'todos': items})
 
 def toggle_todo(request, todo_id):
-    todo = TodoItem.objects.get(id=todo_id)
+    todo = get_object_or_404(TodoItem, id=todo_id)
     todo.completed = not todo.completed
     todo.save()
     messages.success(request, 'Todo updated successfully')
     return redirect('todos')
 
 def delete_todo(request, todo_id):
-    todo = TodoItem.objects.get(id=todo_id)
+    todo = get_object_or_404(TodoItem, id=todo_id)
     todo.delete()
     messages.error(request, 'Todo deleted successfully')
-    return redirect('todos')  
-
-from django.http import JsonResponse
-from .models import TodoItem
-from django.shortcuts import get_object_or_404
+    return redirect('todos')
 
 def edit_todo(request):
     if request.method == 'POST':
